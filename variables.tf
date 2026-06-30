@@ -32,11 +32,10 @@ variable "external_id_application_owner_object_ids" {
   nullable    = true
 }
 
-variable "foundry_owner_principal_id" {
-  description = "Stable principal ID to keep the Foundry Owner role assignment from drifting based on which identity runs Terraform."
-  type        = string
-  default     = null
-  nullable    = true
+variable "foundry_owner_upns" {
+  description = "User principal names that should receive the Foundry Owner role. Prefer UPNs over raw email for guest users."
+  type        = set(string)
+  default     = []
 }
 
 variable "expapi_identifier_uri" {

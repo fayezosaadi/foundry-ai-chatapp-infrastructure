@@ -11,10 +11,25 @@ locals {
   location            = "eastus2"
   aisearch_location   = "eastus"
 
+  foundry_owner_subjects = merge(
+    {
+      for upn, user in data.azuread_user.foundry_owner_users :
+      "upn-${substr(sha1(upn), 0, 12)}" => {
+        principal_id = user.object_id
+      }
+    },
+    length(var.foundry_owner_upns) == 0 ? {
+      "owners" = {
+        principal_id = data.azurerm_client_config.current.object_id
+      }
+    } : {}
+  )
+
   foundry_role_assignments = {
-    "owners" = {
+    for key, owner in local.foundry_owner_subjects :
+    key => {
       role_definition_name = "Foundry Owner"
-      principal_id         = coalesce(var.foundry_owner_principal_id, data.azurerm_client_config.current.object_id)
+      principal_id         = owner.principal_id
     }
   }
 

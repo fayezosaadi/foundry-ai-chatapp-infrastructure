@@ -44,13 +44,15 @@ The public-internet model here is:
 | `external_id_tenant_subdomain` | Subdomain for hosted sign-in, e.g. `contoso` for `https://contoso.ciamlogin.com/` | `null` |
 | `external_id_custom_domain` | Optional branded auth domain replacing `ciamlogin.com` | `null` |
 | `external_id_application_owner_object_ids` | Optional External ID tenant object IDs to own the SPA/API apps | `null` |
-| `foundry_owner_principal_id` | Stable principal ID for the existing Foundry Owner RBAC assignment | `null` |
+| `foundry_owner_upns` | Foundry Owner assignees, looked up by Entra user principal name | `[]` |
 | `spa_redirect_uris` | Allowed redirect URIs for the frontend SPA app | `["http://localhost:5173"]` |
 | `expapi_identifier_uri` | Optional override for the backend API audience URI | `null` |
 
 If neither `external_id_tenant_subdomain` nor `external_id_custom_domain` is set, the auth outputs intentionally leave `authority` empty because the hosted sign-in domain is still unknown.
 
 For local environment-specific values, keep a file like `vars/external-id.tfvars` and pass it with `-var-file=vars/external-id.tfvars`.
+
+For guest users, prefer the **Entra UPN** form (for example `name_example.com#EXT#@tenant.onmicrosoft.com`) rather than raw email when populating `foundry_owner_upns`. If `foundry_owner_upns` is empty, Terraform falls back to the current runner so the initial bootstrap still works.
 
 ## Provider split
 
