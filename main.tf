@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 module "foundry_standard_agent_service" {
-  source = "git::ssh://git@github.com/fayezosaadi/azure_foundry_standard_agent_service.git?ref=v0.0.1"
+  source = "github.com/fayezosaadi/azure_foundry_standard_agent_service"
 
   resource_group   = azurerm_resource_group.rg
   location         = local.location
