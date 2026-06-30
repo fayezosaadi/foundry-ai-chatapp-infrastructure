@@ -19,6 +19,12 @@ env:
   ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
   ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+
+concurrency:
+  group: terraform-prod
+  cancel-in-progress: false
 
 jobs:
   terraform-plan:
@@ -40,6 +46,12 @@ jobs:
         uses: hashicorp/setup-terraform@37c3618610d60f92cc57cb7f7e74c2569db0fcd6
         with:
           terraform_wrapper: false
+
+      - name: Validate Azure OIDC configuration
+        run: |
+          test -n "${ARM_CLIENT_ID}" || (echo "::error::ARM_CLIENT_ID is empty. Ensure AZURE_CLIENT_ID secret is set and available to this workflow."; exit 1)
+          test -n "${ARM_SUBSCRIPTION_ID}" || (echo "::error::ARM_SUBSCRIPTION_ID is empty. Ensure AZURE_SUBSCRIPTION_ID secret is set and available to this workflow."; exit 1)
+          test -n "${ARM_TENANT_ID}" || (echo "::error::ARM_TENANT_ID is empty. Ensure AZURE_TENANT_ID secret is set and available to this workflow."; exit 1)
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
@@ -130,6 +142,12 @@ jobs:
       # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@37c3618610d60f92cc57cb7f7e74c2569db0fcd6
+
+      - name: Validate Azure OIDC configuration
+        run: |
+          test -n "${ARM_CLIENT_ID}" || (echo "::error::ARM_CLIENT_ID is empty. Ensure AZURE_CLIENT_ID secret is set and available to this workflow."; exit 1)
+          test -n "${ARM_SUBSCRIPTION_ID}" || (echo "::error::ARM_SUBSCRIPTION_ID is empty. Ensure AZURE_SUBSCRIPTION_ID secret is set and available to this workflow."; exit 1)
+          test -n "${ARM_TENANT_ID}" || (echo "::error::ARM_TENANT_ID is empty. Ensure AZURE_TENANT_ID secret is set and available to this workflow."; exit 1)
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
