@@ -30,11 +30,11 @@
 #    steps:
 #      # Checkout the repository to the GitHub Actions runner
 #      - name: Checkout
-#        uses: actions/checkout@v4
+#        uses: actions/checkout@4f1f4aec02e41874fa0262ea8ff5172d7978ad1e
 #      
 #      # Install the latest version of the Terraform CLI
 #      - name: Setup Terraform
-#        uses: hashicorp/setup-terraform@v3
+#        uses: hashicorp/setup-terraform@37c3618610d60f92cc57cb7f7e74c2569db0fcd6
 #        with:
 #          terraform_wrapper: false
 #      
