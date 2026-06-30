@@ -112,7 +112,7 @@ jobs:
 
       # If this is a PR post the changes
       - name: Push Terraform Output to PR
-        if: github.ref != 'refs/heads/main'
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         env:
           SUMMARY: "${{ steps.tf-plan-string.outputs.summary }}"
@@ -128,19 +128,26 @@ jobs:
               issue_number: context.issue.number
             });
 
-            const existingComment = comments.find((comment) => {
-              const isBot = comment.user?.type === 'Bot';
-              const hasMarker = comment.body?.includes(marker);
-              return isBot && hasMarker;
-            });
+            const matchingComments = comments
+              .filter((comment) => comment.body?.includes(marker))
+              .sort((a, b) => b.id - a.id);
 
-            if (existingComment) {
+            if (matchingComments.length > 0) {
+              const [commentToKeep, ...commentsToDelete] = matchingComments;
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                comment_id: existingComment.id,
+                comment_id: commentToKeep.id,
                 body
               });
+
+              for (const comment of commentsToDelete) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: comment.id
+                });
+              }
             } else {
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
