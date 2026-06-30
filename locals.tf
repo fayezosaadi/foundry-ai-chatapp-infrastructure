@@ -27,7 +27,7 @@ locals {
       }
       sku = {
         name     = "GlobalStandard"
-        capacity = 1200
+        capacity = 100
       }
     }
   }
