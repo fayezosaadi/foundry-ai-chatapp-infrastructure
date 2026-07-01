@@ -5,6 +5,10 @@ resource "azuread_application" "spa" {
   owners           = local.customer_identity_application_owner_object_ids
   sign_in_audience = "AzureADMyOrg"
 
+  api {
+    requested_access_token_version = 2
+  }
+
   single_page_application {
     redirect_uris = local.normalized_spa_redirect_uris
   }
