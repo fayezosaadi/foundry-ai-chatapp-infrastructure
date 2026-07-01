@@ -22,6 +22,7 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  TF_VAR_external_id_client_id: "${{ secrets.EXTERNAL_ID_CLIENT_ID }}"
 
 concurrency:
   group: terraform-prod
@@ -34,7 +35,6 @@ jobs:
     env:
       #this is needed since we are running terraform with read-only permissions
       ARM_SKIP_PROVIDER_REGISTRATION: true
-      TF_VAR_external_id_client_id: "${{ secrets.EXTERNAL_ID_CLIENT_ID }}"
     outputs:
       tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
 
@@ -167,8 +167,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     needs: [ terraform-plan ]
-    env:
-      TF_VAR_external_id_client_id: "${{ secrets.EXTERNAL_ID_CLIENT_ID }}"
 
     steps:
       # Checkout the repository to the GitHub Actions runner
@@ -184,15 +182,18 @@ jobs:
           test -n "${ARM_CLIENT_ID}" || (echo "::error::ARM_CLIENT_ID is empty. Ensure AZURE_CLIENT_ID secret is set and available to this workflow."; exit 1)
           test -n "${ARM_SUBSCRIPTION_ID}" || (echo "::error::ARM_SUBSCRIPTION_ID is empty. Ensure AZURE_SUBSCRIPTION_ID secret is set and available to this workflow."; exit 1)
           test -n "${ARM_TENANT_ID}" || (echo "::error::ARM_TENANT_ID is empty. Ensure AZURE_TENANT_ID secret is set and available to this workflow."; exit 1)
-          test -n "${TF_VAR_external_id_client_id}" || (echo "::error::TF_VAR_external_id_client_id is empty. Ensure EXTERNAL_ID_CLIENT_ID production environment secret is set."; exit 1)
+          test -n "${TF_VAR_external_id_client_id}" || (echo "::error::TF_VAR_external_id_client_id is empty. Ensure EXTERNAL_ID_CLIENT_ID secret is set and available to this workflow."; exit 1)
           test -f "vars/dev.tfvars" || (echo "::error::vars/dev.tfvars is missing from the checkout."; exit 1)
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Plan
-        run: terraform plan -no-color -out tfplan -var-file=vars/dev.tfvars
+      # Download saved plan from artifacts  
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@484a0b528fb4d7bd804637ccb632e47a0e638317
+        with:
+          name: tfplan
 
       # Terraform Apply
       - name: Terraform Apply
