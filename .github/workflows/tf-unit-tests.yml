@@ -2,6 +2,21 @@ name: 'Terraform Unit Tests'
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '.terraform.lock.hcl'
+      - '.github/workflows/tf-unit-tests.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '.terraform.lock.hcl'
+      - '.github/workflows/tf-unit-tests.yml'
 
 permissions:
   security-events: write

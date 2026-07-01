@@ -1,80 +1,96 @@
 # foundry-ai-chatapp-infrastructure
 
-This repo owns the shared Azure infrastructure for the chat app, including the Microsoft Entra External ID app registrations that future `backend-expapi` and `frontend-spa` repos will consume.
+Terraform for the shared Azure + Microsoft Entra External ID foundation behind the chat app.
 
-## What Terraform manages
+## What this repo manages
 
-- Azure resource group + Foundry resources
-- Entra External ID SPA app registration for the future frontend
-- Entra External ID API app registration for the future backend
-- `Chat.ReadWrite` delegated scope exposed by the backend API
+- Azure resource group and Foundry-related infrastructure
+- External ID app registration for the future SPA
+- External ID app registration for the future backend API
+- Backend `Chat.ReadWrite` delegated scope
 - SPA permission to request that backend scope
-- Outputs for future SPA/API repos to validate tokens against Entra External ID
+- Outputs the future `frontend-spa` and `backend-expapi` repos can consume
 
-## What Terraform does **not** manage
+## What this repo does **not** manage
 
-These still need to be bootstrapped in the Entra admin center or separate automation:
+These still need to be created in the External ID tenant:
 
-- Creating the External ID customer tenant itself
-- User flows / sign-up-sign-in journeys
-- Social or phone identity providers
-- Branding, custom auth domain, MFA, and custom sign-up attributes
+- customer tenant itself
+- sign-up/sign-in user flow
+- social, phone, or email identity providers
+- branding, custom domain, MFA, custom sign-up attributes
 
-## Default auth shape
+## Auth model
 
-Terraform creates two separate app registrations so the future repos stay decoupled:
+This repo is set up for **public internet users**:
 
-| App registration | Purpose | Default local behavior |
-| --- | --- | --- |
-| `tech4life-chatapp-spa-dev01` | Browser client used by `frontend-spa` | Redirect URI `http://localhost:5173/` |
-| `tech4life-chatapp-expapi-dev01` | Protected API used by `backend-expapi` | Exposes `Chat.ReadWrite` at `api://tech4life-chatapp-expapi-dev01` |
+1. users authenticate with **Microsoft Entra External ID**
+2. the SPA requests `Chat.ReadWrite` from the backend API
+3. the backend validates External ID tokens
+4. the backend calls Azure AI Foundry with **its own identity**, not user OBO
 
-The public-internet model here is:
+## Config files
 
-1. Users sign in to the SPA through **Microsoft Entra External ID**
-2. The SPA requests `Chat.ReadWrite` on the backend API
-3. The backend validates External ID tokens
-4. The backend calls Azure AI Foundry using **its own managed identity**, not user OBO
+### Committed shared config
 
-## Inputs
+`vars/dev.tfvars`
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `external_id_tenant_id` | Customer tenant ID used by the `azuread.external` provider | `null` |
-| `external_id_client_id` | Optional separate client ID for the `azuread.external` provider | `null` |
-| `external_id_tenant_subdomain` | Subdomain for hosted sign-in, e.g. `contoso` for `https://contoso.ciamlogin.com/` | `null` |
-| `external_id_custom_domain` | Optional branded auth domain replacing `ciamlogin.com` | `null` |
-| `external_id_application_owner_object_ids` | Optional External ID tenant object IDs to own the SPA/API apps | `null` |
-| `foundry_owner_upns` | Foundry Owner assignees, looked up by Entra user principal name | `[]` |
-| `spa_redirect_uris` | Allowed redirect URIs for the frontend SPA app | `["http://localhost:5173"]` |
-| `expapi_identifier_uri` | Optional override for the backend API audience URI | `null` |
+This file currently holds non-secret tenant-specific values such as:
 
-If neither `external_id_tenant_subdomain` nor `external_id_custom_domain` is set, the auth outputs intentionally leave `authority` empty because the hosted sign-in domain is still unknown.
+- `external_id_tenant_id`
+- `external_id_tenant_subdomain`
+- `foundry_owner_upns`
 
-For local environment-specific values, keep a file like `vars/dev.tfvars` and pass it with `-var-file=vars/dev.tfvars`.
+### GitHub secrets
 
-For guest users, prefer the **Entra UPN** form (for example `name_example.com#EXT#@tenant.onmicrosoft.com`) rather than raw email when populating `foundry_owner_upns`. If `foundry_owner_upns` is empty, Terraform falls back to the current runner so the initial bootstrap still works.
+The workflows expect:
 
-## Provider split
+- `AZURE_CLIENT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+- `AZURE_TENANT_ID`
+- `EXTERNAL_ID_CLIENT_ID`
 
-This repo now assumes **two identity planes**:
+`EXTERNAL_ID_CLIENT_ID` is only needed because the External ID tenant is managed with a **separate tenant-specific
+GitHub OIDC app**.
 
-- `azurerm` stays pointed at the Azure subscription tenant that owns Foundry/resources
-- `azuread.external` points at the **customer External ID tenant** that will issue end-user tokens
+## Main Terraform inputs
 
-That means your Terraform runner must be able to authenticate to both contexts.
+| Variable                                   | Purpose                                                       |
+|--------------------------------------------|---------------------------------------------------------------|
+| `external_id_tenant_id`                    | External ID tenant GUID                                       |
+| `external_id_client_id`                    | Optional GitHub OIDC app client ID for the External ID tenant |
+| `external_id_tenant_subdomain`             | External ID hosted sign-in subdomain                          |
+| `external_id_custom_domain`                | Optional branded login domain                                 |
+| `external_id_application_owner_object_ids` | Optional app-registration owners in the External ID tenant    |
+| `foundry_owner_upns`                       | Users who should receive the Foundry Owner role               |
+| `spa_redirect_uris`                        | Redirect URIs for the future SPA                              |
+| `expapi_identifier_uri`                    | Optional override for the backend API audience URI            |
 
-In GitHub Actions, the simplest pattern is:
+## Local usage
 
-- let the default `azuread` provider use the same ambient OIDC/Azure auth context as `azurerm`
-- pass `external_id_tenant_id` and `external_id_tenant_subdomain` as Terraform variables
-- optionally pass `external_id_client_id` if the External ID tenant needs a different OIDC-backed app registration than the main Azure tenant
+```bash
+terraform init
+terraform plan -var-file=vars/dev.tfvars
+terraform apply -var-file=vars/dev.tfvars
+```
 
-## Outputs for future repos
+For guest users in `foundry_owner_upns`, use the **Entra UPN** form, for example:
+
+```text
+name_example.com#EXT#@tenant.onmicrosoft.com
+```
+
+## GitHub Actions behavior
+
+- `tf-plan-apply.yml` only runs when Terraform-related files change
+- plan and apply both use the same repo-level Azure and External ID production identities
+- apply uses the saved `tfplan` artifact from the plan job
+
+## Outputs for future app repos
 
 ### `frontend_spa_auth_settings`
 
-Use in `frontend-spa` for Entra External ID MSAL configuration. Redirect URIs that only include scheme + host are normalized with a trailing slash to satisfy Entra app registration rules:
+Use for the future SPA:
 
 - `tenant_id`
 - `client_id`
@@ -82,11 +98,10 @@ Use in `frontend-spa` for Entra External ID MSAL configuration. Redirect URIs th
 - `authority_host`
 - `redirect_uris`
 - `api_scope`
-- `user_flow_association_required`
 
 ### `backend_expapi_auth_settings`
 
-Use in `backend-expapi` for JWT validation and upstream access wiring:
+Use for the future backend:
 
 - `tenant_id`
 - `client_id`
@@ -96,26 +111,13 @@ Use in `backend-expapi` for JWT validation and upstream access wiring:
 - `accepted_scopes`
 - `token_issuer`
 - `upstream_access_model`
-- `user_flow_association_required`
 
-## Notes for later backend work
+## Bootstrap checklist
 
-- `backend-expapi` should use **managed identity / app identity** to call Azure AI Foundry.
-- Do **not** build the public-user flow around OBO to Foundry; External ID is the customer auth layer, not the Azure resource authorization layer.
-- When the backend runtime exists, it will still need its own managed identity and RBAC assignment to the Foundry resource.
+Before internet users can actually sign up:
 
-## Bootstrap checklist for public sign-up
-
-Before internet users can actually register:
-
-1. Create or choose a **Microsoft Entra External ID** customer tenant.
-2. Configure at least one sign-up method, typically email/password and Google.
-3. Create a **sign-up and sign-in user flow**.
-4. Associate the SPA/API app registrations with that user flow.
-5. Point future frontend/backend repos at the emitted authority, tenant, audience, and scope outputs.
-
-## Why this differs from the previous internal Entra/OBO model
-
-- End-user authentication now belongs to **External ID**
-- Azure AI Foundry authorization belongs to the **backend's own identity**
-- Customer sign-up experiences are mostly **manual External ID tenant configuration**, not standard `azuread` app-registration-only Terraform
+1. create the External ID customer tenant
+2. enable at least one sign-in method, usually email/password first
+3. create a sign-up/sign-in user flow
+4. associate the SPA and API apps with that flow
+5. later point the app repos at the Terraform outputs from this repo
