@@ -22,6 +22,7 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  TF_VAR_external_id_client_id: "${{ secrets.EXTERNAL_ID_CLIENT_ID }}"
 
 concurrency:
   group: terraform-prod
@@ -53,6 +54,7 @@ jobs:
           test -n "${ARM_CLIENT_ID}" || (echo "::error::ARM_CLIENT_ID is empty. Ensure AZURE_CLIENT_ID secret is set and available to this workflow."; exit 1)
           test -n "${ARM_SUBSCRIPTION_ID}" || (echo "::error::ARM_SUBSCRIPTION_ID is empty. Ensure AZURE_SUBSCRIPTION_ID secret is set and available to this workflow."; exit 1)
           test -n "${ARM_TENANT_ID}" || (echo "::error::ARM_TENANT_ID is empty. Ensure AZURE_TENANT_ID secret is set and available to this workflow."; exit 1)
+          test -f "vars/dev.tfvars" || (echo "::error::vars/dev.tfvars is missing from the checkout."; exit 1)
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
@@ -69,7 +71,7 @@ jobs:
         id: tf-plan
         run: |
           export exitcode=0
-          terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+          terraform plan -detailed-exitcode -no-color -out tfplan -var-file=vars/dev.tfvars || export exitcode=$?
 
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
 
@@ -179,6 +181,7 @@ jobs:
           test -n "${ARM_CLIENT_ID}" || (echo "::error::ARM_CLIENT_ID is empty. Ensure AZURE_CLIENT_ID secret is set and available to this workflow."; exit 1)
           test -n "${ARM_SUBSCRIPTION_ID}" || (echo "::error::ARM_SUBSCRIPTION_ID is empty. Ensure AZURE_SUBSCRIPTION_ID secret is set and available to this workflow."; exit 1)
           test -n "${ARM_TENANT_ID}" || (echo "::error::ARM_TENANT_ID is empty. Ensure AZURE_TENANT_ID secret is set and available to this workflow."; exit 1)
+          test -f "vars/dev.tfvars" || (echo "::error::vars/dev.tfvars is missing from the checkout."; exit 1)
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init

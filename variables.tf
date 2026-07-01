@@ -11,6 +11,13 @@ variable "external_id_tenant_id" {
   nullable    = true
 }
 
+variable "external_id_client_id" {
+  description = "Optional client ID used by the azuread.external provider when the External ID tenant needs a different OIDC-backed app registration than the main Azure tenant."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
 variable "external_id_tenant_subdomain" {
   description = "Tenant subdomain used by Entra External ID hosted sign-in, e.g. contoso if the authority is https://contoso.ciamlogin.com/."
   type        = string
