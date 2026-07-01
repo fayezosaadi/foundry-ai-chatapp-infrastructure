@@ -41,6 +41,7 @@ The public-internet model here is:
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `external_id_tenant_id` | Customer tenant ID used by the `azuread.external` provider | `null` |
+| `external_id_client_id` | Optional separate client ID for the `azuread.external` provider | `null` |
 | `external_id_tenant_subdomain` | Subdomain for hosted sign-in, e.g. `contoso` for `https://contoso.ciamlogin.com/` | `null` |
 | `external_id_custom_domain` | Optional branded auth domain replacing `ciamlogin.com` | `null` |
 | `external_id_application_owner_object_ids` | Optional External ID tenant object IDs to own the SPA/API apps | `null` |
@@ -50,7 +51,7 @@ The public-internet model here is:
 
 If neither `external_id_tenant_subdomain` nor `external_id_custom_domain` is set, the auth outputs intentionally leave `authority` empty because the hosted sign-in domain is still unknown.
 
-For local environment-specific values, keep a file like `vars/external-id.tfvars` and pass it with `-var-file=vars/external-id.tfvars`.
+For local environment-specific values, keep a file like `vars/dev.tfvars` and pass it with `-var-file=vars/dev.tfvars`.
 
 For guest users, prefer the **Entra UPN** form (for example `name_example.com#EXT#@tenant.onmicrosoft.com`) rather than raw email when populating `foundry_owner_upns`. If `foundry_owner_upns` is empty, Terraform falls back to the current runner so the initial bootstrap still works.
 
@@ -62,6 +63,12 @@ This repo now assumes **two identity planes**:
 - `azuread.external` points at the **customer External ID tenant** that will issue end-user tokens
 
 That means your Terraform runner must be able to authenticate to both contexts.
+
+In GitHub Actions, the simplest pattern is:
+
+- let the default `azuread` provider use the same ambient OIDC/Azure auth context as `azurerm`
+- pass `external_id_tenant_id` and `external_id_tenant_subdomain` as Terraform variables
+- optionally pass `external_id_client_id` if the External ID tenant needs a different OIDC-backed app registration than the main Azure tenant
 
 ## Outputs for future repos
 
