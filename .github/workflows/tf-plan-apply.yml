@@ -4,9 +4,19 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '.terraform.lock.hcl'
+      - '.github/workflows/tf-plan-apply.yml'
   pull_request:
     branches:
       - main
+    paths:
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '.terraform.lock.hcl'
+      - '.github/workflows/tf-plan-apply.yml'
 
 #Special permissions required for OIDC authentication
 permissions:
@@ -19,10 +29,10 @@ env:
   ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
   ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+  TF_VAR_external_id_client_id: "${{ secrets.EXTERNAL_ID_CLIENT_ID }}"
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  TF_VAR_external_id_client_id: "${{ secrets.EXTERNAL_ID_CLIENT_ID }}"
 
 concurrency:
   group: terraform-prod
