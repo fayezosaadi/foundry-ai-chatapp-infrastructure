@@ -35,7 +35,7 @@ jobs:
       
       # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@37c3618610d60f92cc57cb7f7e74c2569db0fcd6
+        uses: hashicorp/setup-terraform@9e05bee487d92fc90f5e0f61c85c3f9b03745748
 
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a
