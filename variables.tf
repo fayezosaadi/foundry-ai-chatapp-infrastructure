@@ -1,13 +1,13 @@
 variable "external_client_id" {
   description = "The Application ID for the external tenant OIDC app registration"
-  type    = string
-  default = null
+  type        = string
+  default     = null
 }
 
 variable "external_tenant_id" {
   description = "The Directory ID of the external tenant"
-  type    = string
-  default = null
+  type        = string
+  default     = null
 }
 
 variable "backend_api_display_name" {
