@@ -3,6 +3,10 @@ provider "azurerm" {
   use_oidc = true
 }
 
+provider "azapi" {
+  use_oidc = true
+}
+
 provider "azuread" {
   alias    = "external_tenant"
   use_oidc = true
