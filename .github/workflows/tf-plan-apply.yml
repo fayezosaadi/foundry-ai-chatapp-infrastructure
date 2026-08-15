@@ -37,7 +37,7 @@ jobs:
 
       # Install the latest version of the Terraform CLI
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@37c3618610d60f92cc57cb7f7e74c2569db0fcd6
+        uses: hashicorp/setup-terraform@8620a60d7c841f00a53b5dd39f0027c2d042082f
         with:
           terraform_wrapper: false
       
@@ -144,7 +144,7 @@ jobs:
         uses: actions/checkout@4f1f4aec02e41874fa0262ea8ff5172d7978ad1e
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@37c3618610d60f92cc57cb7f7e74c2569db0fcd6
+        uses: hashicorp/setup-terraform@8620a60d7c841f00a53b5dd39f0027c2d042082f
 
       - name: Terraform Init
         run: terraform init
