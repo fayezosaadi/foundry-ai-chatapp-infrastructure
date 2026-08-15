@@ -24,6 +24,11 @@ locals {
         version = "2025-04-14"
         format  = "OpenAI"
       }
+      "text-embedding-3-large" = {
+        name    = "text-embedding-3-large"
+        version = "1"
+        format  = "OpenAI"
+      }
       sku = {
         name     = "GlobalStandard"
         capacity = 100
