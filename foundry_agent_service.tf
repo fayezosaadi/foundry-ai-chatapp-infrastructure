@@ -1,5 +1,5 @@
 module "foundry_agent_service" {
-  source = "git::https://github.com/fayezosaadi/azure_foundry_standard_agent_service.git?ref=5535b34cc7d736898c187ba4d9037374a77e9e0a"
+  source = "git::https://github.com/fayezosaadi/azure_foundry_standard_agent_service.git?ref=bd22265a93621a6979e5cb6dca9f83445c98a6d7"
 
   resource_group   = azurerm_resource_group.rg
   network_identity = local.network_identity
