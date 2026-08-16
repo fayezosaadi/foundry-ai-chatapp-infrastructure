@@ -32,11 +32,11 @@ jobs:
     steps:
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
       
       # Install the latest version of the Terraform CLI
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@8620a60d7c841f00a53b5dd39f0027c2d042082f
         with:
           terraform_wrapper: false
       
