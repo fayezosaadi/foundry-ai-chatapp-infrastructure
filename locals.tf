@@ -16,6 +16,11 @@ locals {
   location        = "eastus2"
   search_location = "eastus"
 
+  # Shared RG
+  shared_workspace         = "shared"
+  shared_rg_name           = "rg-${local.shared_workspace}-${local.name_suffix}"
+  shared_app_insights_name = "appinsights-${local.shared_workspace}-${local.name_suffix}"
+
   # Foundry
   deployments = {
     "gpt-4.1" = {
@@ -32,6 +37,22 @@ locals {
       sku = {
         name     = "GlobalStandard"
         capacity = 100
+      }
+    }
+  }
+
+  connections = {
+    (data.azurerm_application_insights.app_insights.name) = {
+      category = "AppInsights"
+      target   = data.azurerm_application_insights.app_insights.id
+      authType = "ApiKey"
+      credentials = {
+        key = data.azurerm_application_insights.app_insights.connection_string
+      }
+      metadata = {
+        ApiType    = "Azure"
+        ResourceId = data.azurerm_application_insights.app_insights.id
+        location   = data.azurerm_application_insights.app_insights.location
       }
     }
   }
