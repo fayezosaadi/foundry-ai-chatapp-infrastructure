@@ -9,3 +9,10 @@ resource "azurerm_resource_group" "rg" {
 
   tags = merge(module.metadata.tags, { what_is_this = "ChatApp Infrastructure Resource Group" })
 }
+
+resource "azurerm_container_app_environment" "acae" {
+  name                = local.acae_name
+  location            = local.location
+  resource_group_name = local.rg_name
+  tags                = merge(module.metadata.tags, { what_is_this = "ChatApp Infrastructure Container App Environment" })
+}

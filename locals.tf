@@ -15,6 +15,7 @@ locals {
   rg_name         = "rg-${local.workspace}-${local.name_suffix}"
   location        = "eastus2"
   search_location = "eastus"
+  acae_name       = "acae-${local.workspace}-${local.name_suffix}"
 
   # Shared RG
   shared_workspace         = "shared"
