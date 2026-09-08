@@ -20,7 +20,7 @@ jobs:
       
       # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@8620a60d7c841f00a53b5dd39f0027c2d042082f
+        uses: hashicorp/setup-terraform@b75000b53e9ce4de2b4712237bbdb711bdc92aba
       
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
